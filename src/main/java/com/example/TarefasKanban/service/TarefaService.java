@@ -1,6 +1,7 @@
 package com.example.TarefasKanban.service;
 
 import com.example.TarefasKanban.dto.TarefaRequest;
+import com.example.TarefasKanban.enums.PrioridadeDaTarefa;
 import com.example.TarefasKanban.enums.StatusDaTarefa;
 import com.example.TarefasKanban.model.Tarefa;
 import com.example.TarefasKanban.repository.TarefaRepository;
@@ -8,9 +9,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RequestBody;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -24,6 +23,14 @@ public class TarefaService {
     public Map<StatusDaTarefa, List<Tarefa>> listarTodos() {
         List<Tarefa> tarefas =   tarefaRepository.findAll(Sort.by("prioridade"));
         return tarefas.stream().collect(Collectors.groupingBy(Tarefa::getStatus));
+    }
+
+    public List<Tarefa> relatorioDeTarefasAtrasadas(){
+        List<Tarefa> tarefas = tarefaRepository.findAll();
+
+        return tarefas.stream()
+                .filter(tarefa -> tarefa.getPrazo().before(new Date()) && !tarefa.getStatus().equals(StatusDaTarefa.Concluido))
+                .collect(Collectors.toList());
     }
 
     public Tarefa criarTarefa(@RequestBody Tarefa tarefa) {
@@ -82,6 +89,20 @@ public class TarefaService {
         return "Registro não encontrado";
     }
 
+    public List<Tarefa> filtrarTarefas(PrioridadeDaTarefa prioridade, Date dateLimit) {
+        List<Tarefa> tarefas = tarefaRepository.findAll();
+        List<Tarefa> tarefasFiltradas = new ArrayList<>();
+
+        for (Tarefa tarefa : tarefas) {
+            boolean prioridadeMatch = (prioridade == null || tarefa.getPrioridade().equals(prioridade));
+            boolean dataMatch = (dateLimit == null || tarefa.getPrazo().equals(dateLimit));
+            if (prioridadeMatch && dataMatch) {
+                tarefasFiltradas.add(tarefa);
+            }
+        }
+
+        return tarefasFiltradas;
+    }
 
     public void salvar(Tarefa tarefa) {
         tarefaRepository.save(tarefa);

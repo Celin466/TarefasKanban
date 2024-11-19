@@ -11,6 +11,7 @@ public class Tarefa {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+    @Column(nullable = false)
     private String titulo;
     private String descricao;
     private Date dataCriacao;

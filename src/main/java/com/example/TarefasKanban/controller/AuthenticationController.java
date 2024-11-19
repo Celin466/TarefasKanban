@@ -1,13 +1,16 @@
 package com.example.TarefasKanban.controller;
 
 import com.example.TarefasKanban.dto.AuthenticationDto;
+import com.example.TarefasKanban.dto.LoginResponseDto;
 import com.example.TarefasKanban.dto.RegisterDto;
 import com.example.TarefasKanban.model.Usuario;
 import com.example.TarefasKanban.repository.UserRepository;
+import com.example.TarefasKanban.service.TokenService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -24,12 +27,16 @@ public class AuthenticationController {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private TokenService tokenService;
+
     @PostMapping("/login")
     public ResponseEntity login(@RequestBody AuthenticationDto data) {
-        var usernamePassword = new UsernamePasswordAuthenticationToken(data.login(), data.senha());
+        var usernamePassword = new UsernamePasswordAuthenticationToken(data.login(), data.password());
         var auth = this.authenticationManager.authenticate(usernamePassword);
+        var token = tokenService.generateToken((Usuario) auth.getPrincipal());
 
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok(new LoginResponseDto(token));
     }
 
     @PostMapping("/register")
